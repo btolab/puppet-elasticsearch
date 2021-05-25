@@ -369,6 +369,7 @@ class elasticsearch (
   Boolean $restart_config_change  = $restart_on_change,
   Boolean $restart_package_change = $restart_on_change,
   Boolean $restart_plugin_change  = $restart_on_change,
+  Boolean                                         $legacy_java = true,
 ) {
 
   #### Validate parameters
