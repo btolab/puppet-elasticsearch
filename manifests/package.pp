@@ -21,6 +21,13 @@ class elasticsearch::package {
 
   if $elasticsearch::ensure == 'present' {
 
+    file { $elasticsearch::configdir:
+      ensure => 'directory',
+      group  => $elasticsearch::elasticsearch_group,
+      owner  => 'root',
+      mode   => '2750'
+    }
+
     if $elasticsearch::restart_package_change {
       Package['elasticsearch'] ~> Elasticsearch::Service <| |>
     }
@@ -155,6 +162,22 @@ class elasticsearch::package {
 
     } else {
       if ($elasticsearch::manage_repo and $facts['os']['family'] == 'Debian') {
+        # work-around elasticsearch package postinst/prerm package issues
+        # instance keystore cli (java) expects ES_CONF_PATH variable, but the package
+        # scripts assume it's always /etc/elasticsearch :(
+        # touch the files so it doesn't complain on upgrade
+        # https://github.com/elastic/elasticsearch/pull/51827
+        # TODO safe to remove after upgrade to ES 7
+        file { '/etc/elasticsearch/.elasticsearch.keystore.initial_md5sum':
+          content => 'afc927e7ebed425d7f593b766b0e5b6c  /etc/elasticsearch/elasticsearch.keystore',
+          replace => false,
+        }
+        -> file { '/etc/elasticsearch/elasticsearch.keystore':
+          source  => "puppet:///modules/${module_name}/elasticsearch.keystore",
+          replace => false,
+          before  => Package['elasticsearch'],
+        }
+
         Class['apt::update'] -> Package['elasticsearch']
       }
     }

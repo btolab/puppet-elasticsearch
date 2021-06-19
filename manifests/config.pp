@@ -22,11 +22,6 @@ class elasticsearch::config {
   if ( $elasticsearch::ensure == 'present' ) {
 
     file {
-      $elasticsearch::configdir:
-        ensure => 'directory',
-        group  => $elasticsearch::elasticsearch_group,
-        owner  => 'root',
-        mode   => '2750';
       $elasticsearch::datadir:
         ensure => 'directory',
         group  => $elasticsearch::elasticsearch_group,
